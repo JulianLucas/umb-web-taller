@@ -1,36 +1,70 @@
-<?php
+<?php 
 require_once __DIR__ . '/db.php';
 
 class Modelo {
 
-    static public function listar() {
-        global $conexion;
-        $sql = "SELECT * FROM donaciones ORDER BY id DESC";
-        $stmt = $conexion->query($sql);
-        return $stmt->fetchAll();
+    private static $db;
+
+    // Obtener conexión sin usar "global"
+    private static function getConexion() {
+        if (!self::$db) {
+            global $conexion; 
+            self::$db = $conexion;
+        }
+        return self::$db;
     }
 
+    // ================================
+    // 🟦 LISTAR DONACIONES
+    // ================================
+    public static function listar() {
+        try {
+            $db = self::getConexion();
+            $sql = "SELECT * FROM donaciones ORDER BY id DESC";
+            $stmt = $db->query($sql);
+            return $stmt->fetchAll();
+
+        } catch (PDOException $e) {
+            return [
+                "error" => "Error al listar: " . $e->getMessage()
+            ];
+        }
+    }
+
+    // ================================
+    // 🟩 CREAR DONACIÓN
+    // ================================
     public static function crear($nombre, $correo, $monto) {
-    global $conexion;
 
-    $stmt = $conexion->prepare("
-        INSERT INTO donaciones (nombre, correo, monto, fecha)
-        VALUES (:nombre, :correo, :monto, CURRENT_DATE())
-    ");
+        // Validaciones simples
+        if (empty($nombre) || empty($correo) || empty($monto)) {
+            return ["error" => "Todos los campos son obligatorios"];
+        }
 
-    $stmt->execute([
-        ":nombre" => $nombre,
-        ":correo" => $correo,
-        ":monto" => $monto
-    ]);
+        try {
+            $db = self::getConexion();
 
-    return [
-        "msg" => "creado",
-        "id" => $conexion->lastInsertId()
-    ];
-}
+            $stmt = $db->prepare("
+                INSERT INTO donaciones (nombre, correo, monto, fecha)
+                VALUES (:nombre, :correo, :monto, CURRENT_DATE())
+            ");
 
+            $stmt->execute([
+                ":nombre" => $nombre,
+                ":correo" => $correo,
+                ":monto"  => $monto
+            ]);
 
-    // Las otras funciones NO se tocan
+            return [
+                "msg" => "creado",
+                "id"  => $db->lastInsertId()
+            ];
+
+        } catch (PDOException $e) {
+            return [
+                "error" => "Error al crear donación: " . $e->getMessage()
+            ];
+        }
+    }
 
 }
