@@ -6,7 +6,7 @@ $DB_HOST = 'switchback.proxy.rlwy.net';
 $DB_PORT = '11327';
 $DB_NAME = 'railway';
 $DB_USER = 'root';
-$DB_PASS = 'zTFCkJYjnpOsohIiZOynRtEapXJxcKhy'; // <-- tu contraseña real
+$DB_PASS = ''; // <-- tu contraseña real
 
 try {
     // CONEXIÓN A POSTGRESQL
