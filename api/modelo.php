@@ -22,7 +22,7 @@ class Modelo {
             $db = self::getConexion();
             $sql = "SELECT * FROM donaciones ORDER BY id DESC";
             $stmt = $db->query($sql);
-            return $stmt->fetchAll();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         } catch (PDOException $e) {
             return [
@@ -32,11 +32,10 @@ class Modelo {
     }
 
     // ================================
-    // 🟩 CREAR DONACIÓN
+    // 🟩 CREAR DONACIÓN (sin AUTO_INCREMENT)
     // ================================
     public static function crear($nombre, $correo, $monto) {
 
-        // Validaciones simples
         if (empty($nombre) || empty($correo) || empty($monto)) {
             return ["error" => "Todos los campos son obligatorios"];
         }
@@ -44,12 +43,19 @@ class Modelo {
         try {
             $db = self::getConexion();
 
+            // 1️⃣ Obtener el próximo ID
+            $stmt = $db->query("SELECT IFNULL(MAX(id), 0) + 1 AS next_id FROM donaciones");
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $id = $row["next_id"];
+
+            // 2️⃣ Insertar manualmente el ID
             $stmt = $db->prepare("
-                INSERT INTO donaciones (nombre, correo, monto, fecha)
-                VALUES (:nombre, :correo, :monto, CURRENT_DATE())
+                INSERT INTO donaciones (id, nombre, correo, monto, fecha)
+                VALUES (:id, :nombre, :correo, :monto, CURRENT_DATE())
             ");
 
             $stmt->execute([
+                ":id"     => $id,
                 ":nombre" => $nombre,
                 ":correo" => $correo,
                 ":monto"  => $monto
@@ -57,7 +63,7 @@ class Modelo {
 
             return [
                 "msg" => "creado",
-                "id"  => $db->lastInsertId()
+                "id"  => $id
             ];
 
         } catch (PDOException $e) {
