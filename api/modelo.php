@@ -51,39 +51,43 @@ class Modelo {
     // ================================
     public static function crear($nombre, $correo, $monto) {
 
-        if (empty($nombre) || empty($correo) || empty($monto)) {
-            return ["error" => "Todos los campos son obligatorios"];
-        }
-
-        try {
-            $db = self::getConexion();
-
-            // 1️⃣ Obtener el próximo ID
-            $stmt = $db->query("SELECT IFNULL(MAX(id), 0) + 1 AS next_id FROM donaciones");
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            $id = $row["next_id"];
-
-            // 2️⃣ Insertar manualmente el ID
-            $stmt = $db->prepare("
-                INSERT INTO donaciones (id, nombre, correo, monto, fecha)
-                VALUES (:id, :nombre, :correo, :monto, CURRENT_DATE())
-            ");
-
-            $stmt->execute([
-                ":id"     => $id,
-                ":nombre" => $nombre,
-                ":correo" => $correo,
-                ":monto"  => $monto
-            ]);
-
-            return $id;
-
-        } catch (PDOException $e) {
-            return [
-                "error" => "Error al crear donación: " . $e->getMessage()
-            ];
-        }
+    if (empty($nombre) || empty($correo) || empty($monto)) {
+        return ["error" => "Todos los campos son obligatorios"];
     }
+
+    try {
+        $db = self::getConexion();
+
+        // 1️⃣ Obtener el próximo ID manualmente
+        $stmt = $db->query("SELECT IFNULL(MAX(id), 0) + 1 AS next_id FROM donaciones");
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $id = $row["next_id"];
+
+        // 2️⃣ Insertar con ID manual
+        $stmt = $db->prepare("
+            INSERT INTO donaciones (id, nombre, correo, monto, fecha)
+            VALUES (:id, :nombre, :correo, :monto, CURRENT_DATE())
+        ");
+
+        $stmt->execute([
+            ":id"     => $id,
+            ":nombre" => $nombre,
+            ":correo" => $correo,
+            ":monto"  => $monto
+        ]);
+
+        return [
+            "msg" => "creado",
+            "id"  => $id
+        ];
+
+    } catch (PDOException $e) {
+        return [
+            "error" => "Error al crear donación: " . $e->getMessage()
+        ];
+    }
+}
+
 
     // ================================
     // 🟨 ACTUALIZAR DONACIÓN

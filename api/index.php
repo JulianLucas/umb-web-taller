@@ -25,25 +25,22 @@ switch ($method) {
         break;
 
     case 'POST':
-        $data = json_decode(file_get_contents('php://input'), true);
+    $data = json_decode(file_get_contents('php://input'), true);
 
-        if (empty($data['nombre']) || empty($data['correo']) || empty($data['monto'])) {
-            http_response_code(400);
-            echo json_encode(['error' => 'nombre, correo y monto son requeridos']);
-            exit();
-        }
+    if (empty($data['nombre']) || empty($data['correo']) || empty($data['monto'])) {
+        http_response_code(400);
+        echo json_encode(['error' => 'nombre, correo y monto son requeridos']);
+        exit();
+    }
 
-        $id = Modelo::crear(
-            $data['nombre'],
-            $data['correo'],
-            $data['monto']
-        );
+    $resp = Modelo::crear(
+        $data['nombre'],
+        $data['correo'],
+        $data['monto']
+    );
 
-        echo json_encode([
-            'msg' => 'creado',
-            'id' => $id
-        ]);
-        break;
+    echo json_encode($resp);
+    break;
 
     case 'PUT':
         if (!isset($_GET['id'])) { 
