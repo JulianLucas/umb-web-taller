@@ -1,7 +1,6 @@
 <?php
-// api/index.php
 header("Content-Type: application/json; charset=utf-8");
-header("Access-Control-Allow-Origin: *"); // En producción: restringir al dominio del frontend
+header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 
@@ -15,6 +14,7 @@ require_once __DIR__ . '/modelo.php';
 $method = $_SERVER['REQUEST_METHOD'];
 
 switch ($method) {
+
     case 'GET':
         if (isset($_GET['id'])) {
             $item = Modelo::obtener((int)$_GET['id']);
@@ -26,18 +26,31 @@ switch ($method) {
 
     case 'POST':
         $data = json_decode(file_get_contents('php://input'), true);
-        if (empty($data['nombre'])) {
+
+        if (empty($data['nombre']) || empty($data['correo']) || empty($data['monto'])) {
             http_response_code(400);
-            echo json_encode(['error' => 'nombre requerido']);
-            break;
+            echo json_encode(['error' => 'nombre, correo y monto son requeridos']);
+            exit();
         }
-        $id = Modelo::crear($data['nombre'], $data['correo'] ?? '', $data['monto'] ?? 0);
-        if ($id) echo json_encode(['msg' => 'creado', 'id' => $id]);
-        else { http_response_code(500); echo json_encode(['error'=>'no creado']); }
+
+        $id = Modelo::crear(
+            $data['nombre'],
+            $data['correo'],
+            $data['monto']
+        );
+
+        echo json_encode([
+            'msg' => 'creado',
+            'id' => $id
+        ]);
         break;
 
     case 'PUT':
-        if (!isset($_GET['id'])) { http_response_code(400); echo json_encode(['error'=>'id requerido']); break; }
+        if (!isset($_GET['id'])) { 
+            http_response_code(400); 
+            echo json_encode(['error'=>'id requerido']); 
+            break; 
+        }
         $id = (int)$_GET['id'];
         $data = json_decode(file_get_contents('php://input'), true);
         $ok = Modelo::actualizar($id, $data);
@@ -45,7 +58,11 @@ switch ($method) {
         break;
 
     case 'DELETE':
-        if (!isset($_GET['id'])) { http_response_code(400); echo json_encode(['error'=>'id requerido']); break; }
+        if (!isset($_GET['id'])) { 
+            http_response_code(400); 
+            echo json_encode(['error'=>'id requerido']); 
+            break; 
+        }
         $id = (int)$_GET['id'];
         $ok = Modelo::borrar($id);
         echo json_encode(['ok' => (bool)$ok]);
