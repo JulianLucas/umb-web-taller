@@ -1,16 +1,15 @@
 <?php
 // api/db.php
 
-// Toma valores desde variables de entorno de Render
 $DB_HOST = getenv('DB_HOST') ?: 'switchback.proxy.rlwy.net';
 $DB_PORT = getenv('DB_PORT') ?: '11327';
 $DB_NAME = getenv('DB_NAME') ?: 'railway';
 $DB_USER = getenv('DB_USER') ?: 'postgres';
-$DB_PASS = getenv('DB_PASS') ?: ''; // NO poner contraseña aquí
+$DB_PASS = getenv('DB_PASS') ?: '';
 
 try {
-    // PostgreSQL sin SSL (importante)
-    $dsn = "pgsql:host={$DB_HOST};port={$DB_PORT};dbname={$DB_NAME}";
+    // Forzar que NO use SSL (Railway no soporta SSL en el proxy)
+    $dsn = "pgsql:host={$DB_HOST};port={$DB_PORT};dbname={$DB_NAME};sslmode=disable";
 
     $conexion = new PDO($dsn, $DB_USER, $DB_PASS, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
