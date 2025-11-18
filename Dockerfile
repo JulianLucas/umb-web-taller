@@ -1,12 +1,18 @@
 FROM php:8.2-apache
 
-# Instalar extensiones necesarias para PostgreSQL
-RUN apt-get update && apt-get install -y libpq-dev \
-    && docker-php-ext-install pdo_pgsql pgsql
+# Instalar dependencias necesarias para MySQL
+RUN apt-get update && apt-get install -y \
+    default-mysql-client \
+    libmysqlclient-dev
 
-# Copiar API dentro de Apache
-COPY api/ /var/www/html/
+# Instalar extensiones PHP para MySQL
+RUN docker-php-ext-install pdo pdo_mysql
 
-# Habilitar mod_rewrite
+# Activar mod_rewrite
 RUN a2enmod rewrite
-    
+
+# Copiar tu proyecto completo
+COPY . /var/www/html/
+
+# Permisos opcionales
+RUN chown -R www-data:www-data /var/www/html
