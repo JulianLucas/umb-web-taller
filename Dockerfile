@@ -1,10 +1,12 @@
 FROM php:8.2-apache
 
-# Instalar extensiones necesarias para MYSQL (no PostgreSQL)
-RUN docker-php-ext-install pdo pdo_mysql
+# Instalar extensiones necesarias para PostgreSQL
+RUN apt-get update && apt-get install -y libpq-dev \
+    && docker-php-ext-install pdo_pgsql pgsql
 
-# Copiar el proyecto al servidor Apache
-COPY . /var/www/html/
+# Copiar API dentro de Apache
+COPY api/ /var/www/html/
 
-# Habilitar mod_rewrite para APIs o rutas amigables
+# Habilitar mod_rewrite
 RUN a2enmod rewrite
+    
