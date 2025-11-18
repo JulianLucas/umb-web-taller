@@ -1,43 +1,75 @@
 <?php
+header("Content-Type: application/json; charset=utf-8");
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Headers: *");
-header("Access-Control-Allow-Methods: *");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 
-require_once 'modelo.php';
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(204);
+    exit();
+}
 
-$metodo = $_SERVER['REQUEST_METHOD'];
+require_once __DIR__ . '/modelo.php';
 
-switch ($metodo) {
+$method = $_SERVER['REQUEST_METHOD'];
+
+switch ($method) {
 
     case 'GET':
-        echo json_encode(Modelo::listar());
+        if (isset($_GET['id'])) {
+            $item = Modelo::obtener((int)$_GET['id']);
+            echo json_encode($item ?: []);
+        } else {
+            echo json_encode(Modelo::listar());
+        }
         break;
 
     case 'POST':
-        $data = json_decode(file_get_contents("php://input"), true);
-        echo json_encode(Modelo::crear(
-            $data["nombre"],
-            $data["correo"],
-            $data["monto"]
-        ));
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        if (empty($data['nombre']) || empty($data['correo']) || empty($data['monto'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'nombre, correo y monto son requeridos']);
+            exit();
+        }
+
+        $id = Modelo::crear(
+            $data['nombre'],
+            $data['correo'],
+            $data['monto']
+        );
+
+        echo json_encode([
+            'msg' => 'creado',
+            'id' => $id
+        ]);
         break;
 
     case 'PUT':
-        $data = json_decode(file_get_contents("php://input"), true);
-        echo json_encode(Modelo::actualizar(
-            $data["id"],
-            $data["nombre"],
-            $data["correo"],
-            $data["monto"]
-        ));
+        if (!isset($_GET['id'])) { 
+            http_response_code(400); 
+            echo json_encode(['error'=>'id requerido']); 
+            break; 
+        }
+        $id = (int)$_GET['id'];
+        $data = json_decode(file_get_contents('php://input'), true);
+        $ok = Modelo::actualizar($id, $data);
+        echo json_encode(['ok' => (bool)$ok]);
         break;
 
     case 'DELETE':
-        $data = json_decode(file_get_contents("php://input"), true);
-        echo json_encode(Modelo::eliminar($data["id"]));
+        if (!isset($_GET['id'])) { 
+            http_response_code(400); 
+            echo json_encode(['error'=>'id requerido']); 
+            break; 
+        }
+        $id = (int)$_GET['id'];
+        $ok = Modelo::borrar($id);
+        echo json_encode(['ok' => (bool)$ok]);
         break;
 
     default:
-        echo json_encode(["error" => "Método no permitido"]);
+        http_response_code(405);
+        echo json_encode(['error'=>'Método no permitido']);
         break;
 }
