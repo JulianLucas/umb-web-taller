@@ -4,12 +4,13 @@
 $DB_HOST = getenv('DB_HOST') ?: 'switchback.proxy.rlwy.net';
 $DB_PORT = getenv('DB_PORT') ?: '11327';
 $DB_NAME = getenv('DB_NAME') ?: 'railway';
-$DB_USER = getenv('DB_USER') ?: 'postgres';
+$DB_USER = getenv('DB_USER') ?: 'root';
 $DB_PASS = getenv('DB_PASS') ?: '';
 
 try {
-    // Forzar que NO use SSL (Railway no soporta SSL en el proxy)
-    $dsn = "pgsql:host={$DB_HOST};port={$DB_PORT};dbname={$DB_NAME};sslmode=disable";
+    // Conexión MySQL (NO PostgreSQL)
+    $dsn = "mysql:host={$DB_HOST};port={$DB_PORT};dbname={$DB_NAME};charset=utf8mb4";
+
 
     $conexion = new PDO($dsn, $DB_USER, $DB_PASS, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
