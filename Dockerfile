@@ -1,18 +1,18 @@
 FROM php:8.2-apache
 
-# Instalar dependencias necesarias para MySQL
+# Instalar dependencias correctas para MySQL en Debian Bookworm
 RUN apt-get update && apt-get install -y \
-    default-mysql-client \
-    libmysqlclient-dev
+    mariadb-client \
+    default-libmysqlclient-dev
 
 # Instalar extensiones PHP para MySQL
-RUN docker-php-ext-install pdo pdo_mysql
+RUN docker-php-ext-install mysqli pdo pdo_mysql
 
 # Activar mod_rewrite
 RUN a2enmod rewrite
 
-# Copiar tu proyecto completo
+# Copiar tu proyecto (API)
 COPY . /var/www/html/
 
-# Permisos opcionales
+# Permisos
 RUN chown -R www-data:www-data /var/www/html
