@@ -5,17 +5,16 @@ class Modelo {
 
     private static $db;
 
-    // Obtener conexión sin usar "global"
     private static function getConexion() {
         if (!self::$db) {
-            global $conexion; 
+            global $conexion;
             self::$db = $conexion;
         }
         return self::$db;
     }
 
     // ================================
-    // 🟦 LISTAR DONACIONES
+    // 📘 READ: Listar todas las donaciones
     // ================================
     public static function listar() {
         try {
@@ -25,14 +24,12 @@ class Modelo {
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         } catch (PDOException $e) {
-            return [
-                "error" => "Error al listar: " . $e->getMessage()
-            ];
+            return ["error" => $e->getMessage()];
         }
     }
 
     // ================================
-    // 🟩 CREAR DONACIÓN (sin AUTO_INCREMENT)
+    // 📗 CREATE: Crear donación
     // ================================
     public static function crear($nombre, $correo, $monto) {
 
@@ -43,15 +40,39 @@ class Modelo {
         try {
             $db = self::getConexion();
 
-            // 1️⃣ Obtener el próximo ID
-            $stmt = $db->query("SELECT IFNULL(MAX(id), 0) + 1 AS next_id FROM donaciones");
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            $id = $row["next_id"];
-
-            // 2️⃣ Insertar manualmente el ID
             $stmt = $db->prepare("
-                INSERT INTO donaciones (id, nombre, correo, monto, fecha)
-                VALUES (:id, :nombre, :correo, :monto, CURRENT_DATE())
+                INSERT INTO donaciones (nombre, correo, monto, fecha)
+                VALUES (:nombre, :correo, :monto, CURRENT_DATE())
+            ");
+
+            $stmt->execute([
+                ":nombre" => $nombre,
+                ":correo" => $correo,
+                ":monto"  => $monto
+            ]);
+
+            return [
+                "msg" => "creado",
+                "id"  => $db->lastInsertId()
+            ];
+
+        } catch (PDOException $e) {
+            return ["error" => $e->getMessage()];
+        }
+    }
+
+    // ================================
+    // 📙 UPDATE: Actualizar donación
+    // ================================
+    public static function actualizar($id, $nombre, $correo, $monto) {
+
+        try {
+            $db = self::getConexion();
+
+            $stmt = $db->prepare("
+                UPDATE donaciones 
+                SET nombre = :nombre, correo = :correo, monto = :monto
+                WHERE id = :id
             ");
 
             $stmt->execute([
@@ -61,16 +82,28 @@ class Modelo {
                 ":monto"  => $monto
             ]);
 
-            return [
-                "msg" => "creado",
-                "id"  => $id
-            ];
+            return ["msg" => "actualizado"];
 
         } catch (PDOException $e) {
-            return [
-                "error" => "Error al crear donación: " . $e->getMessage()
-            ];
+            return ["error" => $e->getMessage()];
         }
     }
 
+    // ================================
+    // 📕 DELETE: Eliminar donación
+    // ================================
+    public static function eliminar($id) {
+        try {
+            $db = self::getConexion();
+
+            $stmt = $db->prepare("DELETE FROM donaciones WHERE id = :id");
+
+            $stmt->execute([":id" => $id]);
+
+            return ["msg" => "eliminado"];
+
+        } catch (PDOException $e) {
+            return ["error" => $e->getMessage()];
+        }
+    }
 }
